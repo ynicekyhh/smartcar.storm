@@ -16,7 +16,7 @@ import storm.kafka.SpoutConfig;
 import storm.kafka.StringScheme;
 import storm.kafka.ZkHosts;
 
-public class SmartCarDrivingTopoloy {
+public class SmartCarDrivingTopology {
 
 	public static void main(String[] args) throws AlreadyAliveException, InvalidTopologyException {
 		// 환경 설정
