@@ -46,12 +46,11 @@ public class SmartCarDrivingTopology {
 		
 		topologyBuilder.setSpout( "kafkaSpout", kafkaSpout, 1 );
 		
-		// grouping kafkaSpout->splitBolt 
+		// grouping [kafkaSpout->splitBolt] 
 		topologyBuilder.setBolt( "splitBolt", new SplitBolt(), 1 ).allGrouping("kafkaSpout");
 		
 		
 		// 토폴로지 생성
 		return topologyBuilder.createTopology();
 	}
-
 }
