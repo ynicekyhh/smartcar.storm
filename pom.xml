@@ -101,6 +101,10 @@
 					<finalName>com.bigdata2017.smartcar.storm-1.0</finalName>
 					<createDependencyReducedPom>true</createDependencyReducedPom>
 					<minimizeJar>true</minimizeJar>
+		            <exclusion>
+		                <groupId>org.slf4j</groupId>
+		                <artifactId>log4j-over-slf4j</artifactId>
+		            </exclusion>					
 				</configuration>
 				
 				<executions>
