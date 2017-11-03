@@ -48,6 +48,7 @@ public class SmartCarDrivingTopology {
 		
 		// grouping [kafkaSpout->splitBolt] 
 		topologyBuilder.setBolt( "splitBolt", new SplitBolt(), 1 ).allGrouping("kafkaSpout");
+		// subgrouping [splitBolt->hbaseBolt]
 		//topologyBuilder.setBolt( "hbaseBolt", new HBaseBolt(), 1 ).shuffleGrouping("kafkaSpout");
 		
 		// grouping [kafkaSpout->esperBolt] 
