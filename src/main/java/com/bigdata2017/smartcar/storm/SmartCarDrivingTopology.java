@@ -49,7 +49,7 @@ public class SmartCarDrivingTopology {
 		// grouping [kafkaSpout->splitBolt] 
 		topologyBuilder.setBolt( "splitBolt", new SplitBolt(), 1 ).allGrouping("kafkaSpout");
 		// subgrouping [splitBolt->hbaseBolt]
-		topologyBuilder.setBolt( "hbaseBolt", new HBaseBolt(), 1 ).shuffleGrouping("splitBolt");
+		//topologyBuilder.setBolt( "hbaseBolt", new HBaseBolt(), 1 ).shuffleGrouping("splitBolt");
 		
 		// 토폴로지 생성
 		return topologyBuilder.createTopology();
