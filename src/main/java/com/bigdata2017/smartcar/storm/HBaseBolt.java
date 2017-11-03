@@ -20,7 +20,7 @@ import backtype.storm.tuple.Tuple;
 public class HBaseBolt implements IRichBolt {
 
 	private static final String TABLE_NAME = "table_smartcar_driving";
-	private static final String ZOOKEEPER_QUORUM = "server02.hadoop.com";
+	private static final String ZOOKEEPER_QUORUM = "lx02.hadoop.com";
 	private static final String ZOOKEEPER_CLIENT_PORT = "2181";
 
 	private static final String TUPLE_ROW_KEY_FIELD = "r_key";		
