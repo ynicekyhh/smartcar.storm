@@ -114,7 +114,7 @@ public class HBaseBolt implements IRichBolt {
 		}
 	}
 	
-	private static class TupleTableConfig {
+	private static class TupleTableConfig implements Serializable {
 		static {
 			TupleTableConfig.COLUMN_NAMES = new String[]{ 
 				"date", 
