@@ -103,7 +103,7 @@
 					<minimizeJar>true</minimizeJar>
 					<artifactSet>
 						<excludes>
-							<exclude>slf4j:slf4j:jar:</exclude>
+							<exclude>org.slf4j:slf4j-api</exclude>
 						</excludes>
 					</artifactSet>
 				</configuration>
