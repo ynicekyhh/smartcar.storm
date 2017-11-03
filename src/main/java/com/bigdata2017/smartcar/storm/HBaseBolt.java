@@ -2,15 +2,11 @@ package com.bigdata2017.smartcar.storm;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Increment;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -25,11 +21,11 @@ public class HBaseBolt implements IRichBolt {
 
 	protected OutputCollector collector;
 	protected HTableConnector connector;
-	protected TupleTableConfig conf;
+	protected TupleTableConfig tupleTableConfig;
 	protected boolean autoAck = true;
 
-	public HBaseBolt(TupleTableConfig conf) {
-		this.conf = conf;
+	public HBaseBolt() {
+		tupleTableConfig = new TupleTableConfig();
 	}
 
 	@SuppressWarnings("rawtypes")	
@@ -38,7 +34,7 @@ public class HBaseBolt implements IRichBolt {
 		this.collector = collector;
 
 		try {
-			this.connector = new HTableConnector(conf);
+			this.connector = new HTableConnector();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -47,7 +43,7 @@ public class HBaseBolt implements IRichBolt {
 	@Override
 	public void execute(Tuple tuple) {
 		try {
-			this.connector.getTable().put(conf.getPutFromTuple(tuple));
+			this.connector.getTable().put( TupleTableConfig.getPutFromTuple( tuple ) );
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
@@ -75,210 +71,95 @@ public class HBaseBolt implements IRichBolt {
 	
 	private class HTableConnector implements Serializable {
 
-		private Configuration config;
-		protected HTable table;
-		private String tableName;
-
-		public HTableConnector(final TupleTableConfig conf) throws IOException {
-			
-			this.tableName = conf.getTableName();
-			this.config = HBaseConfiguration.create();
-			this.config.set("hbase.zookeeper.quorum", conf.getZkQuorum());
-			this.config.set("hbase.zookeeper.property.clientPort", conf.getZkClientPort());
-			this.config.set("hbase.cluster.distributed", "true");
-
+		private HTable hTable;
+		
+		public HTableConnector() throws IOException {
 			try {
-				this.table = new HTable(this.config, this.tableName);
+				Configuration config = HBaseConfiguration.create();
+				config.set( "hbase.zookeeper.quorum", TupleTableConfig.ZOOKEEPER_QUORUM );
+				config.set( "hbase.zookeeper.property.clientPort", TupleTableConfig.ZOOKEEPER_CLIENT_PORT );
+				config.set( "hbase.cluster.distributed", "true" );
+	
+				hTable = new HTable( config, TupleTableConfig.TABLE_NAME );
+	
+				if ( TupleTableConfig.IS_BATCH ) {
+					hTable.setAutoFlush( false, true );
+				}
+	
+				// Check the configured column families exist
+				if ( !columnFamilyExists( TupleTableConfig.COLUMN_FAMILY ) ) {
+					throw new RuntimeException(String.format("HBase table '%s' does not have column family '%s'", TupleTableConfig.TABLE_NAME, TupleTableConfig.COLUMN_FAMILY ));
+				}
 			} catch (IOException ex) {
-				throw new IOException( "Unable to establish connection to HBase table "	+ this.tableName, ex);
-			}
-
-			if (conf.isBatch()) {
-				this.table.setAutoFlush(false, true);
-			}
-
-			// If set, override write buffer size
-			if (conf.getWriteBufferSize() > 0) {
-				try {
-					this.table.setWriteBufferSize(conf.getWriteBufferSize());
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
-			}
-
-			// Check the configured column families exist
-			for (String cf : conf.getColumnFamilies()) {
-				if (!columnFamilyExists(cf)) {
-					throw new RuntimeException(String.format("HBase table '%s' does not have column family '%s'", conf.getTableName(), cf));
-				}
+				throw new IOException( "Unable to establish connection to HBase table "	+ TupleTableConfig.TABLE_NAME, ex);
 			}
 		}
 
-		private boolean columnFamilyExists(final String columnFamily)
-				throws IOException {
-			return this.table.getTableDescriptor().hasFamily(Bytes.toBytes(columnFamily));
+		private boolean columnFamilyExists( final String columnFamily ) throws IOException {
+			return hTable.getTableDescriptor().hasFamily( Bytes.toBytes( columnFamily ) );
 		}
 
 		public HTable getTable() {
-			return table;
+			return hTable;
 		}
 
 		public void close() {
 			try {
-				this.table.close();
-			} catch (IOException ex) {
+				if( hTable != null ) {
+					hTable.close();
+				}
+			} catch( IOException ex ) {
 				ex.printStackTrace();
 			}
 		}
 	}
 	
-	private class TupleTableConfig implements Serializable {
-
-		private String tableName;
-		private String zkQuorum;
-		private String zkClientPort;
-
-		protected String tupleRowKeyField;
-		protected String tupleTimestampField;
-		protected Map<String, Set<String>> columnFamilies;
-		private boolean batch = true;
-		protected boolean writeToWAL = true;
-		private long writeBufferSize = 0L;
-
-		public TupleTableConfig(final String table, final String rowKeyField) {
-			this.tableName = table;
-			this.tupleRowKeyField = rowKeyField;
-			this.tupleTimestampField = "";
-			this.columnFamilies = new HashMap<String, Set<String>>();
+	private static class TupleTableConfig {
+		static {
+			TupleTableConfig.COLUMN_NAMES = new String[]{ 
+				"date", 
+				"car_number",
+				"speed_pedal",
+				"break_pedal",
+				"steer_angle",
+				"direct_light",
+				"speed",
+				"area_number" };
 		}
+		
+		private static final String TABLE_NAME = "table_smartcar_driving";
+		private static final String ZOOKEEPER_QUORUM = "server02.hadoop.com";
+		private static final String ZOOKEEPER_CLIENT_PORT = "2181";
 
-		public TupleTableConfig(final String table, final String rowKeyField, final String timestampField) {
-			this.tableName = table;
-			this.tupleRowKeyField = rowKeyField;
-			this.tupleTimestampField = timestampField;
-			this.columnFamilies = new HashMap<String, Set<String>>();
-		}
+		private static final String TUPLE_ROW_KEY_FIELD = "r_key";		
+		private static final String COLUMN_FAMILY = "cf";
+//		private static final String TUPLE_TIMESTAMP_FIELD = "";
+		private static final boolean IS_BATCH = false;
 
-		public void addColumn(final String columnFamily, final String columnQualifier) {
-			Set<String> columns = this.columnFamilies.get(columnFamily);
-
-			if (columns == null) {
-				columns = new HashSet<String>();
-			}
-			columns.add(columnQualifier);
-
-			this.columnFamilies.put(columnFamily, columns);
-		}
-
-		public Put getPutFromTuple(final Tuple tuple) {
-
-			byte[] rowKey = Bytes.toBytes(tuple.getStringByField(tupleRowKeyField));
-
+		private static String[] COLUMN_NAMES = null;
+		
+		public static Put getPutFromTuple(final Tuple tuple) {
 			long ts = 0;
-			if (!tupleTimestampField.equals("")) {
-				ts = tuple.getLongByField(tupleTimestampField);
-			}
+			byte[] rowKey = Bytes.toBytes( tuple.getStringByField( TUPLE_ROW_KEY_FIELD ) );
+//			if (!TUPLE_TIMESTAMP_FIELD.equals( "" )) {
+//				ts = tuple.getLongByField( TUPLE_TIMESTAMP_FIELD );
+//			}
 
-			Put p = new Put(rowKey);
-			p.setWriteToWAL(writeToWAL);
+			Put p = new Put( rowKey );
+			p.setWriteToWAL(true);
 
-			if (columnFamilies.size() > 0) {
-				for (String cf : columnFamilies.keySet()) {
-					byte[] cfBytes = Bytes.toBytes(cf);
-					for (String cq : columnFamilies.get(cf)) {
-						byte[] cqBytes = Bytes.toBytes(cq);
-						byte[] val = Bytes.toBytes(tuple.getStringByField(cq));
-
-						if (ts > 0) {
-							p.add(cfBytes, cqBytes, ts, val);
-						} else {
-							p.add(cfBytes, cqBytes, val);
-						}
-					}
+			byte[] cfBytes = Bytes.toBytes( COLUMN_FAMILY );
+			for( String cq : COLUMN_NAMES ) {
+				byte[] cqBytes = Bytes.toBytes( cq );
+				byte[] val = Bytes.toBytes( tuple.getStringByField( cq ) );
+				if (ts > 0) {
+					p.add( cfBytes, cqBytes, ts, val );
+				} else {
+					p.add( cfBytes, cqBytes, val );
 				}
 			}
 
 			return p;
 		}
-
-		public Increment getIncrementFromTuple(final Tuple tuple, final long increment) {
-			byte[] rowKey = Bytes.toBytes(tuple.getStringByField(tupleRowKeyField));
-
-			Increment inc = new Increment(rowKey);
-			inc.setWriteToWAL(writeToWAL);
-
-			if (columnFamilies.size() > 0) {
-				for (String cf : columnFamilies.keySet()) {
-					byte[] cfBytes = Bytes.toBytes(cf);
-					for (String cq : columnFamilies.get(cf)) {
-						byte[] val;
-						try {
-							val = Bytes.toBytes(tuple.getStringByField(cq));
-						} catch (IllegalArgumentException ex) {
-							// if cq isn't a tuple field, use cq for counter instead
-							// of tuple
-							// value
-							val = Bytes.toBytes(cq);
-						}
-						inc.addColumn(cfBytes, val, increment);
-					}
-				}
-			}
-
-			return inc;
-		}
-
-		public String getTableName() {
-			return tableName;
-		}
-
-		public boolean isBatch() {
-			return batch;
-		}
-
-		public void setBatch(boolean batch) {
-			this.batch = batch;
-		}
-
-		public void setWriteToWAL(boolean writeToWAL) {
-			this.writeToWAL = writeToWAL;
-		}
-
-		public boolean isWriteToWAL() {
-			return writeToWAL;
-		}
-
-		public void setWriteBufferSize(long writeBufferSize) {
-			this.writeBufferSize = writeBufferSize;
-		}
-
-		public long getWriteBufferSize() {
-			return writeBufferSize;
-		}
-
-		public Set<String> getColumnFamilies() {
-			return this.columnFamilies.keySet();
-		}
-
-		public String getTupleRowKeyField() {
-			return tupleRowKeyField;
-		}
-
-		public String getZkClientPort() {
-			return zkClientPort;
-		}
-
-		public String getZkQuorum() {
-			return zkQuorum;
-		}
-
-		public void setZkClientPort(String zkClientPort) {
-			this.zkClientPort = zkClientPort;
-		}
-
-		public void setZkQuorum(String zkQuorum) {
-			this.zkQuorum = zkQuorum;
-		}
 	}	
-
 }
