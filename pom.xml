@@ -100,10 +100,9 @@
 					<outputDirectory>release</outputDirectory>
 					<finalName>com.bigdata2017.smartcar.storm-1.0</finalName>
 					<createDependencyReducedPom>true</createDependencyReducedPom>
-					<!--minimizeJar>true</minimizeJar-->
+					<minimizeJar>true</minimizeJar>
 					<artifactSet>
 						<excludes>
-							<exclude>org.slf4j:slf4j-api</exclude>
 							<exclude>org.slf4j:slf4j-log4j12</exclude>
 						</excludes>
 					</artifactSet>
