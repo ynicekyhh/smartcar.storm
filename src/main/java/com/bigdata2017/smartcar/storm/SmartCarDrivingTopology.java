@@ -3,6 +3,8 @@ package com.bigdata2017.smartcar.storm;
 import java.util.Arrays;
 import java.util.UUID;
 
+import org.apache.storm.redis.common.config.JedisPoolConfig;
+
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
@@ -46,10 +48,22 @@ public class SmartCarDrivingTopology {
 		
 		topologyBuilder.setSpout( "kafkaSpout", kafkaSpout, 1 );
 		
-		// grouping [kafkaSpout->splitBolt] 
-		topologyBuilder.setBolt( "splitBolt", new SplitBolt(), 1 ).allGrouping("kafkaSpout");
-		// subgrouping [splitBolt->hbaseBolt]
-		topologyBuilder.setBolt( "hbaseBolt", new HBaseBolt(), 1 ).shuffleGrouping("splitBolt");
+		// Grouping [kafkaSpout -> splitBolt] 
+		topologyBuilder.setBolt( "splitBolt", new SplitBolt(), 1 ).allGrouping( "kafkaSpout" );
+		// Subgrouping [splitBolt -> hbaseBolt]
+		topologyBuilder.setBolt( "hbaseBolt", new HBaseBolt(), 1 ).shuffleGrouping( "splitBolt" );
+		
+		
+		// Grouping [kafkaSpout -> esperBolt]
+		topologyBuilder.setBolt( "esperBolt", new EsperBolt(), 1 ).allGrouping( "kafkaSpout" );		
+		// Subgrouping [esperBolt -> redisBolt]
+		JedisPoolConfig jedisPoolConfig =
+			new JedisPoolConfig.
+			Builder().
+			setHost( "lx02.hadoop.com" ).
+			setPort( 6379 ).
+			build();
+		topologyBuilder.setBolt( "redisBolt", new RedisBolt( jedisPoolConfig ), 1 ).shuffleGrouping( "esperBolt" );
 		
 		// 토폴로지 생성
 		return topologyBuilder.createTopology();
