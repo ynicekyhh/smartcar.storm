@@ -57,7 +57,11 @@ public class EsperBolt extends BaseBasicBolt {
 		stmtESP.addListener( new UpdateListener(){
 			@Override
 			public void update( EventBean[] newEvents, EventBean[] oldEvents ) {
+				
+				LOGGER.error( "ESPListener:update-->" + Arrays.toString(newEvents) );
+				
 				if( newEvents != null ) {
+					LOGGER.error( "ESPListener:update--->occcurs!!!" );
 					isOverSpeedEvent = true;
 				}
 			}
@@ -84,7 +88,7 @@ public class EsperBolt extends BaseBasicBolt {
 
 		espService.getEPRuntime().sendEvent( drivingInfo ); 
 
-		LOGGER.error( "sendEvent:" + drivingInfo.toString() );
+		//LOGGER.error( "sendEvent:" + drivingInfo.toString() );
 		
 		if( isOverSpeedEvent ) {
 			//발생일시(14자리), 차량번호
