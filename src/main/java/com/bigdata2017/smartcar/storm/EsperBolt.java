@@ -1,10 +1,6 @@
 package com.bigdata2017.smartcar.storm;
 
-import java.util.Arrays;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.espertech.esper.client.Configuration;
 import com.espertech.esper.client.EPServiceProvider;
@@ -24,7 +20,6 @@ import backtype.storm.tuple.Values;
 public class EsperBolt extends BaseBasicBolt {
 	
 	private static final long serialVersionUID = 1L;
-	private static final Logger LOGGER = LoggerFactory.getLogger(EsperBolt.class);	
 	
 	private static final int MAX_SPEED = 30;
 	private static final int DURATION_ESTIMATE = 30;
@@ -57,11 +52,7 @@ public class EsperBolt extends BaseBasicBolt {
 		stmtESP.addListener( new UpdateListener(){
 			@Override
 			public void update( EventBean[] newEvents, EventBean[] oldEvents ) {
-				
-				LOGGER.error( "ESPListener:update-->" + Arrays.toString(newEvents) );
-				
 				if( newEvents != null ) {
-					LOGGER.error( "ESPListener:update--->occcurs!!!" );
 					isOverSpeedEvent = true;
 				}
 			}

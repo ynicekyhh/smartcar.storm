@@ -3,8 +3,6 @@ package com.bigdata2017.smartcar.storm;
 import org.apache.storm.redis.bolt.AbstractRedisBolt;
 import org.apache.storm.redis.common.config.JedisClusterConfig;
 import org.apache.storm.redis.common.config.JedisPoolConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
@@ -14,7 +12,6 @@ import redis.clients.jedis.exceptions.JedisException;
 
 public class RedisBolt extends AbstractRedisBolt {
 	private static final long serialVersionUID = 1L;
-	private static final Logger LOGGER = LoggerFactory.getLogger(RedisBolt.class);		
 
 	public RedisBolt( JedisClusterConfig  config ) {
 		super( config );
@@ -33,8 +30,6 @@ public class RedisBolt extends AbstractRedisBolt {
 				
 			String date = tuple.getStringByField( "date" );
 			String carNumber = tuple.getStringByField( "car_number" );
-			
-			LOGGER.error( "RedisBolt:execute[" + date + ":" + carNumber );
 	
 			jedisCommands = getInstance();
 			jedisCommands.sadd( date, carNumber );
