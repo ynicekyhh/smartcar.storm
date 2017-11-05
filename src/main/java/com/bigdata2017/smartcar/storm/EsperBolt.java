@@ -1,6 +1,10 @@
 package com.bigdata2017.smartcar.storm;
 
+import java.util.Arrays;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.espertech.esper.client.Configuration;
 import com.espertech.esper.client.EPServiceProvider;
@@ -20,6 +24,7 @@ import backtype.storm.tuple.Values;
 public class EsperBolt extends BaseBasicBolt {
 	
 	private static final long serialVersionUID = 1L;
+	private static final Logger LOGGER = LoggerFactory.getLogger(EsperBolt.class);	
 	
 	private static final int MAX_SPEED = 30;
 	private static final int DURATION_ESTIMATE = 30;
@@ -79,6 +84,8 @@ public class EsperBolt extends BaseBasicBolt {
 
 		espService.getEPRuntime().sendEvent( drivingInfo ); 
 
+		LOGGER.error( "sendEvent:" + drivingInfo.toString() );
+		
 		if( isOverSpeedEvent ) {
 			//발생일시(14자리), 차량번호
 			collector.emit( new Values( drivingInfo.getDate().substring(0,8), 
@@ -149,6 +156,12 @@ public class EsperBolt extends BaseBasicBolt {
 		}
 		public void setAreaNumber(String areaNumber) {
 			this.areaNumber = areaNumber;
+		}
+		@Override
+		public String toString() {
+			return "DrivingInfo [date=" + date + ", carNumber=" + carNumber + ", speedPedal=" + speedPedal
+					+ ", breakPedal=" + breakPedal + ", steerAngle=" + steerAngle + ", directLight=" + directLight
+					+ ", speed=" + speed + ", areaNumber=" + areaNumber + "]";
 		}
 	}
 }
