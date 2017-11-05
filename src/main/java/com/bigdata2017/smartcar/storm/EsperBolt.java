@@ -31,7 +31,7 @@ public class EsperBolt extends BaseBasicBolt {
 	public void prepare(Map stormConf, TopologyContext context) {
 
 		Configuration configuration = new Configuration();
-		configuration.addEventType( "DrivingInfo", DrivingInfo.class.getName());
+		configuration.addEventType( "DrivingInfo", DrivingInfo.class.getName() );
 
 		espService = EPServiceProviderManager.getDefaultProvider( configuration );
 		espService.initialize();
