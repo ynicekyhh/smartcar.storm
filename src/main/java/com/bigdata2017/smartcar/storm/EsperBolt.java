@@ -45,7 +45,7 @@ public class EsperBolt extends BaseBasicBolt {
 				"			directLight,"	+
 				"			speed,"			+
 				"			areaNumber"     +
-				"     FROM	DriverCarInfoBean.win:time_batch(" + DURATION_ESTIMATE + " sec) " +
+				"     FROM	DrivingInfo.win:time_batch(" + DURATION_ESTIMATE + " sec) " +
 				" GROUP BY	carNumber"      +
 				"   HAVING  AVG(speed) > "  + MAX_SPEED;
 		EPStatement stmtESP = espService.getEPAdministrator().createEPL( eplOverSpeed );
