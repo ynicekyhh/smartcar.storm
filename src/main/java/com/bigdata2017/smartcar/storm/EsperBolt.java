@@ -21,8 +21,8 @@ public class EsperBolt extends BaseBasicBolt {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private static final int MAX_SPEED = 30;
-	private static final int DURATION_ESTIMATE = 30;
+	private static final int MAX_SPEED = 10;
+	private static final int DURATION_ESTIMATE = 10;
 	
 	private EPServiceProvider espService;
 	private boolean isOverSpeedEvent = false;
