@@ -55,15 +55,15 @@ public class SmartCarDrivingTopology {
 		
 		
 		// Grouping [kafkaSpout -> esperBolt]
-//		topologyBuilder.setBolt( "esperBolt", new EsperBolt(), 1 ).allGrouping( "kafkaSpout" );		
+		topologyBuilder.setBolt( "esperBolt", new EsperBolt(), 1 ).allGrouping( "kafkaSpout" );
 		// Subgrouping [esperBolt -> redisBolt]
-//		JedisPoolConfig jedisPoolConfig =
-//			new JedisPoolConfig.
-//			Builder().
-//			setHost( "lx02.hadoop.com" ).
-//			setPort( 6379 ).
-//			build();
-//		topologyBuilder.setBolt( "redisBolt", new RedisBolt( jedisPoolConfig ), 1 ).shuffleGrouping( "esperBolt" );
+		JedisPoolConfig jedisPoolConfig =
+			new JedisPoolConfig.
+			Builder().
+			setHost( "lx02.hadoop.com" ).
+			setPort( 6379 ).
+			build();
+		topologyBuilder.setBolt( "redisBolt", new RedisBolt( jedisPoolConfig ), 1 ).shuffleGrouping( "esperBolt" );
 		
 		// 토폴로지 생성
 		return topologyBuilder.createTopology();
