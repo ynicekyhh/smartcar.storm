@@ -84,7 +84,7 @@ public class EsperBolt extends BaseBasicBolt {
 		if( isOverSpeedEvent ) {
 			//발생일시(14자리), 차량번호
 			collector.emit( new Values( drivingInfo.getDate().substring(0,8), 
-										drivingInfo.getCarNumber() + "-" + drivingInfo.getDate() ) );
+										drivingInfo.getCarNumber() + "-" + drivingInfo.getDate() + "-" + drivingInfo.getSpeed() ) );
 			isOverSpeedEvent = false;
 		}		
 	}
